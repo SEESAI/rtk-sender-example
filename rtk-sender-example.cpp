@@ -5,10 +5,16 @@
 #include "PX4-GPSDrivers/src/ubx.h"
 #include "serial-comms.h"
 #include "driver-interface.h"
+#include <chrono>
+
+using namespace std::chrono;
 
 
 int main(int argc, char* argv[])
 {
+    printf("Starting rtk-sender-example sees.ai mod version v1.2\n");
+    printf("Using PX4-GPSDrivers commit 93168099b4c17d2612a28d83ed15e6542a578920\n");
+
     if (argc != 4) {
         printf("\n");
         printf("usage: %s <serial device> <baudrate> <mavlink connection>\n", argv[0]);
@@ -16,6 +22,7 @@ int main(int argc, char* argv[])
         printf("Note: use baudrate 0 to determine baudrate automatically\n");
         return 1;
     }
+
 
     unsigned baudrate = std::stoi(argv[2]);
 
@@ -44,9 +51,13 @@ int main(int argc, char* argv[])
             &DriverInterface::callback_entry, &driver_interface,
             &driver_interface.gps_pos, &driver_interface.sat_info);
 
-    constexpr auto survey_minimum_m = 5;
-    constexpr auto survey_duration_s = 20;
-    driver->setSurveyInSpecs(survey_minimum_m * 10000, survey_duration_s);
+    //constexpr auto survey_minimum_m = 5;
+    //constexpr auto survey_duration_s = 20;
+    //driver->setSurveyInSpecs(survey_minimum_m * 10000, survey_duration_s);
+    
+    // GPS Lavant hard coded for now to test.
+    // Note position accuracy is in mm!
+    driver->setBasePosition(50.867740347,  -0.791097831,87.70, 130);
 
 
     GPSHelper::GPSConfig gps_config {};
@@ -62,15 +73,25 @@ int main(int argc, char* argv[])
 
     printf("configure done!\n");
 
+    const unsigned timeout_ms = 5000;
 
     while (true) {
         // Keep running, and don't stop on timeout.
         // Every now and then it timeouts but I'm not sure if that's actually
         // warranted given correct messages are still arriving.
-        const unsigned timeout_ms = 5000;
-        driver->receive(timeout_ms);
+        int ret =0;
+        
+        auto time_start = high_resolution_clock::now();
+        ret = driver->receive(timeout_ms);
+        auto time_execution = duration_cast<milliseconds>(high_resolution_clock::now() - time_start);
+        printf("time lapsed:%d\n", int(time_execution.count()));
+
+        if (ret<0){           
+            // Timedout
+            printf("timed out, ret:%d",ret);
+            //exit(-1);
+        } 
     }
-    printf("timed out\n");
 
     return 0;
 }

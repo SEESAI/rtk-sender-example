@@ -33,7 +33,7 @@ void DriverInterface::send_rtcm_data(const uint8_t* data, int data_len)
 {
     if (!rtk_plugin_) {
         if (mavsdk_.systems().empty()) {
-            printf("No system available yet\n");
+            printf("No mavlink system available yet\n");
             return;
         }
 
