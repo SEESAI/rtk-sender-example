@@ -3,12 +3,12 @@
 
 #include "PX4-GPSDrivers/src/gps_helper.h"
 #include "PX4-GPSDrivers/src/ubx.h"
-#include "serial-comms.h"
+#include <QSerialPort>
 #include "driver-interface.h"
 #include <chrono>
+#include <thread>
 
 using namespace std::chrono;
-
 
 int main(int argc, char* argv[])
 {
@@ -30,6 +30,33 @@ int main(int argc, char* argv[])
     if (!serial_comms.init(argv[1])) {
         return 2;
     }
+    
+    QSerialPort serial;
+    serial.setPortName(argv[1]);
+    
+    if (!serial.open(QIODevice::ReadWrite)) {
+        int retries = 60;
+        // Give the device some time to come up. In some cases the device is not
+        // immediately accessible right after startup for some reason. This can take 10-20s.
+        while (retries-- > 0 && serial.error() == QSerialPort::PermissionError) {
+            std::cout << "Cannot open device... retrying";
+            std::this_thread::sleep_for(milliseconds(500));
+            if (serial.open(QIODevice::ReadWrite)) {
+                serial.clearError();
+                break;
+            }
+        }
+        if (serial.error() != QSerialPort::NoError) {
+            std::cout << "GPS: Failed to open Serial Device" << argv[1] << ": " << serial.errorString();
+            return 1;
+        }
+    }
+    
+    serial.setBaudrate(QSerialPort::Baud9600);
+    serial.setDataBits(QSerialPort::Data8);
+    serial.setParity(QSerialPort::NoParity);
+    serial.setStopBits(QSerialPort::OneStop);
+    serial.setFlowControl(QSerialPort::NoFlowControl);
 
     mavsdk::Mavsdk mavsdk;
 
@@ -44,7 +71,7 @@ int main(int argc, char* argv[])
         return 3;
     }
 
-    DriverInterface driver_interface(serial_comms, mavsdk);
+    DriverInterface driver_interface(serial, mavsdk);
 
     auto driver = std::make_unique<GPSDriverUBX>(
             GPSDriverUBX::Interface::UART,
@@ -57,14 +84,13 @@ int main(int argc, char* argv[])
     
     // GPS Lavant hard coded for now to test.
     // Note position accuracy is in mm!
-    driver->setBasePosition(50.867740347,  -0.791097831,87.70, 130);
+    driver->setBasePosition(50.867740347, -0.791097831, 87.70, 130);
 
 
     GPSHelper::GPSConfig gps_config {};
     // to test if RTCM is not available
     //gps_config.output_mode = GPSHelper::OutputMode::GPS;
     gps_config.output_mode = GPSHelper::OutputMode::RTCM;
-    gps_config.gnss_systems = GPSHelper::GNSSSystemsMask::RECEIVER_DEFAULTS;
 
     if (driver->configure(baudrate, gps_config) != 0) {
         printf("configure failed\n");
@@ -73,22 +99,22 @@ int main(int argc, char* argv[])
 
     printf("configure done!\n");
 
-    const unsigned timeout_ms = 5000;
+    const unsigned timeout_ms = 1200;
 
     while (true) {
         // Keep running, and don't stop on timeout.
         // Every now and then it timeouts but I'm not sure if that's actually
         // warranted given correct messages are still arriving.
-        int ret =0;
+        int ret = 0;
         
         auto time_start = high_resolution_clock::now();
         ret = driver->receive(timeout_ms);
         auto time_execution = duration_cast<milliseconds>(high_resolution_clock::now() - time_start);
-        printf("time lapsed:%d\n", int(time_execution.count()));
+        // printf("time lapsed:%d\n", int(time_execution.count()));
 
-        if (ret<0){           
+        if (ret < 0){           
             // Timedout
-            printf("timed out, ret:%d",ret);
+            // printf("timed out, ret:%d",ret);
             //exit(-1);
         } 
     }

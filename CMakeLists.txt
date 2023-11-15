@@ -5,12 +5,11 @@ project(rtk-sender-example CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(MAVSDK REQUIRED)
+find_package(Qt5 COMPONENTS SerialPort REQUIRED)
+find_package(MAVSDK REQUIRED PATHS $ENV{HOME}/Work/Sees/BackupLink/MAVSDK/install)
 
 add_executable(rtk-sender-example
     rtk-sender-example.cpp
-    serial-comms.h
-    serial-comms.cpp
     definitions.h
     driver-interface.h
     driver-interface.cpp
@@ -30,6 +29,7 @@ target_compile_options(rtk-sender-example
 
 target_link_libraries(rtk-sender-example
     MAVSDK::mavsdk
+    Qt5::SerialPort
 )
 
 target_include_directories(rtk-sender-example
