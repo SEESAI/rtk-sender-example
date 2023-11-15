@@ -1,4 +1,5 @@
 #include <cstdio>
+#include <iostream>
 #include <memory>
 
 #include "PX4-GPSDrivers/src/gps_helper.h"
@@ -25,11 +26,6 @@ int main(int argc, char* argv[])
 
 
     unsigned baudrate = std::stoi(argv[2]);
-
-    SerialComms serial_comms;
-    if (!serial_comms.init(argv[1])) {
-        return 2;
-    }
     
     QSerialPort serial;
     serial.setPortName(argv[1]);
@@ -52,7 +48,7 @@ int main(int argc, char* argv[])
         }
     }
     
-    serial.setBaudrate(QSerialPort::Baud9600);
+    serial.setBaudRate(QSerialPort::Baud9600);
     serial.setDataBits(QSerialPort::Data8);
     serial.setParity(QSerialPort::NoParity);
     serial.setStopBits(QSerialPort::OneStop);
