@@ -19,7 +19,7 @@ int DriverInterface::callback(GPSCallbackType type, void* data1, int data2)
             return (int)serial_comms_.read((char*)data1, data2);
         }
         case GPSCallbackType::writeDeviceData:
-            if (serial_comms_.write(char*) data1, data2) >= 0) {
+            if (serial_comms_.write((char*) data1, data2) >= 0) {
                 if (serial_comms_.waitForBytesWritten(-1))
                     return data2;
             }
