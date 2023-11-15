@@ -43,7 +43,7 @@ int main(int argc, char* argv[])
             }
         }
         if (serial.error() != QSerialPort::NoError) {
-            std::cout << "GPS: Failed to open Serial Device" << argv[1] << ": " << serial.errorString();
+            std::cout << "GPS: Failed to open Serial Device " << argv[1] << ": " << serial.errorString().data() << std::endl;
             return 1;
         }
     }
