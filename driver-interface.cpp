@@ -53,5 +53,5 @@ void DriverInterface::send_rtcm_data(const uint8_t* data, int data_len)
     rtcm_data.data.insert(rtcm_data.data.end(), data, data + data_len);
     rtk_plugin_->send_rtcm_data(rtcm_data);
 
-    std::cout << "Fix type: " << telemetry_plugin_->gps_info().fix_type << '\n';
+    // std::cout << "Fix type: " << telemetry_plugin_->gps_info().fix_type << '\n';
 }
