@@ -16,10 +16,14 @@ int main(int argc, char* argv[])
     printf("Starting rtk-sender-example sees.ai mod version v1.2\n");
     printf("Using PX4-GPSDrivers commit 93168099b4c17d2612a28d83ed15e6542a578920\n");
 
-    if (argc != 4) {
+    if (argc <= 7) {
         printf("\n");
-        printf("usage: %s <serial device> <baudrate> <mavlink connection>\n", argv[0]);
-        printf("e.g.: %s /dev/ttyUSB0 38400 udp://:14550\n", argv[0]);
+        printf("usage: %s <serial device> <baudrate> <mavlink connection> <rtk mode> <mode params>\n", argv[0]);
+        printf("Different rtk modes require different amount of parameters\n");
+        printf("Mode \"Fixed\" needs three parameters: lat, lon, altitude(m)\n");
+        printf("Mode \"Resurvey\" needs two parameters: duration(s), error(m)\n");
+        printf("e.g.: rtk-sender-example /dev/ttyUSB0 38400 udp://:14550 Fixed 14.3666 0.4556 120\n" );
+        printf("e.g.: rtk-sender-example /dev/ttyUSB0 38400 udp://:14550 Resurvey 120 0.8\n" );
         printf("Note: use baudrate 0 to determine baudrate automatically\n");
         return 1;
     }
@@ -74,13 +78,31 @@ int main(int argc, char* argv[])
             &DriverInterface::callback_entry, &driver_interface,
             &driver_interface.gps_pos, &driver_interface.sat_info);
 
-    //constexpr auto survey_minimum_m = 5;
-    //constexpr auto survey_duration_s = 20;
-    //driver->setSurveyInSpecs(survey_minimum_m * 10000, survey_duration_s);
-    
-    // GPS Lavant hard coded for now to test.
-    // Note position accuracy is in mm!
-    driver->setBasePosition(50.867740347, -0.791097831, 87.70, 130);
+    std::string rtk_mode = std::string(argv[4]);
+    if (rtk_mode == "Fixed"){
+        double lat = std::stof(std::string(argv[5]));
+        double lon = std::stof(std::string(argv[6]));
+        double height = std::stof(std::string(argv[7]));
+        printf("Configuring RTK Base station as Fixed with Lat: %f Lon: %f and Height %f", lat, lon, height);
+        // Note position accuracy is in mm!
+        driver->setBasePosition(lat, lon, height, 130);
+//        driver->setBasePosition(50.867740347,  -0.791097831,87.70, 130);
+
+    }
+    else if (rtk_mode == "Resurvey"){
+        double survey_minimum_m = std::stof(std::string(argv[5]));
+        double survey_duration_s = std::stof(std::string(argv[6]));
+        printf("Resurveying RTK Base station with minimum(m): %f and survey duration(s): %f", survey_minimum_m, survey_duration_s);
+        driver->setSurveyInSpecs(survey_minimum_m * 10000, survey_duration_s);
+
+        //constexpr auto survey_minimum_m = 5;
+        //constexpr auto survey_duration_s = 20;
+        //driver->setSurveyInSpecs(survey_minimum_m * 10000, survey_duration_s);
+    }
+    else{
+        printf("\nError: RTK Mode not recognized! \n ");
+    }
+
 
 
     GPSHelper::GPSConfig gps_config {};
