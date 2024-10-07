@@ -10,17 +10,25 @@ int DriverInterface::callback_entry(GPSCallbackType type, void* data1, int data2
 int DriverInterface::callback(GPSCallbackType type, void* data1, int data2)
 {
     switch (type) {
-        case GPSCallbackType::readDeviceData:
-            return serial_comms_.read(static_cast<uint8_t*>(data1), data2);
-
+        case GPSCallbackType::readDeviceData: {
+            if (serial_comms_.bytesAvailable() == 0) {
+                int timeout = *((int *) data1);
+                if (!serial_comms_.waitForReadyRead(timeout))
+                    return 0;
+            }
+            return (int)serial_comms_.read((char*)data1, data2);
+        }
         case GPSCallbackType::writeDeviceData:
-            return serial_comms_.write(static_cast<const uint8_t*>(data1), data2);
-
+            if (serial_comms_.write((char*) data1, data2) >= 0) {
+                if (serial_comms_.waitForBytesWritten(-1))
+                    return data2;
+            }
+            return -1;
         case GPSCallbackType::setBaudrate:
-            return (serial_comms_.set_baudrate(data2) ? 0 : 1);
+            return serial_comms_.setBaudRate(data2) ? 0 : -1;
 
         case GPSCallbackType::gotRTCMMessage:
-            send_rtcm_data(static_cast<const uint8_t*>(data1), data2);
+            send_rtcm_data((uint8_t*)data1, data2);
             return 0;
 
         default:
@@ -45,5 +53,5 @@ void DriverInterface::send_rtcm_data(const uint8_t* data, int data_len)
     rtcm_data.data.insert(rtcm_data.data.end(), data, data + data_len);
     rtk_plugin_->send_rtcm_data(rtcm_data);
 
-    std::cout << "Fix type: " << telemetry_plugin_->gps_info().fix_type << '\n';
+    // std::cout << "Fix type: " << telemetry_plugin_->gps_info().fix_type << '\n';
 }
