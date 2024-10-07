@@ -16,14 +16,14 @@ int main(int argc, char* argv[])
     printf("Starting rtk-sender-example sees.ai mod version v1.2\n");
     printf("Using PX4-GPSDrivers commit 93168099b4c17d2612a28d83ed15e6542a578920\n");
 
-    if (argc <= 7) {
+    if (argc < 7) {
         printf("\n");
         printf("usage: %s <serial device> <baudrate> <mavlink connection> <rtk mode> <mode params>\n", argv[0]);
         printf("Different rtk modes require different amount of parameters\n");
         printf("Mode \"Fixed\" needs three parameters: lat, lon, altitude(m)\n");
         printf("Mode \"Resurvey\" needs two parameters: duration(s), error(m)\n");
         printf("e.g.: rtk-sender-example /dev/ttyUSB0 38400 udp://:14550 Fixed 14.3666 0.4556 120\n" );
-        printf("e.g.: rtk-sender-example /dev/ttyUSB0 38400 udp://:14550 Resurvey 120 0.8\n" );
+        printf("e.g.: rtk-sender-example /dev/ttyUSB0 38400 udp://:14550 Resurvey 0.8 120\n" );
         printf("Note: use baudrate 0 to determine baudrate automatically\n");
         return 1;
     }
