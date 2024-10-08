@@ -92,7 +92,7 @@ int main(int argc, char* argv[])
     else if (rtk_mode == "Resurvey"){
         double survey_minimum_m = std::stof(std::string(argv[5]));
         double survey_duration_s = std::stof(std::string(argv[6]));
-        printf("Resurveying RTK Base station with minimum(m): %f and survey duration(s): %f", survey_minimum_m, survey_duration_s);
+        printf("Resurveying RTK Base station with minimum(m): %f and survey duration(s): %f\n", survey_minimum_m, survey_duration_s);
         driver->setSurveyInSpecs(survey_minimum_m * 10000, survey_duration_s);
 
         //constexpr auto survey_minimum_m = 5;
@@ -111,11 +111,11 @@ int main(int argc, char* argv[])
     gps_config.output_mode = GPSHelper::OutputMode::RTCM;
 
     if (driver->configure(baudrate, gps_config) != 0) {
-        printf("configure failed\n");
+        printf("Configure failed\n");
         return 4;
     }
 
-    printf("configure done!\n");
+    printf("Configure done!\n");
 
     const unsigned timeout_ms = 1200;
 
