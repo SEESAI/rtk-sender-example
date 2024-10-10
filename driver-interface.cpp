@@ -33,7 +33,7 @@ int DriverInterface::callback(GPSCallbackType type, void* data1, int data2)
 	case GPSCallbackType::surveyInStatus:
 	{
 	    SurveyInStatus* status = (SurveyInStatus*)data1;
-	    printf("Position: %f %f %f", status->latitude, status->longitude, status->altitude);
+	    printf("Position: %f %f %f\n", status->latitude, status->longitude, status->altitude);
 	    printf("Survey-In status: %lu s, cur accuracy: %lu mm, valid: %d, active: %d\n", status->duration, status->mean_accuracy, (int)(status->flags & 1), (int)((status->flags >> 1) & 1));
 	    return 0;
 	}
